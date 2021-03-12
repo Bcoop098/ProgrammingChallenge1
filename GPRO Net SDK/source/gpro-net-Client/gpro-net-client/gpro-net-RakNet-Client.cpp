@@ -23,15 +23,17 @@
 */
 
 #include "gpro-net/gpro-net-client/gpro-net-RakNet-Client.hpp"
-
+#include <iostream>
 
 namespace gproNet
 {
+	std::string userName;
 	cRakNetClient::cRakNetClient()
 	{
 		RakNet::SocketDescriptor sd;
 		char SERVER_IP[16] = "127.0.0.1";
-
+		//prompt user for username with getline? I think
+		//userName = getline();
 		peer->Startup(1, &sd, 1);
 		peer->SetMaximumIncomingConnections(0);
 		peer->Connect(SERVER_IP, SET_GPRO_SERVER_PORT, 0, 0);
@@ -74,16 +76,44 @@ namespace gproNet
 			// client connects to server, send greeting
 			RakNet::BitStream bitstream_w;
 			WriteTest(bitstream_w, "Hello server from client");
+			//also write the username to the packet
+			bitstream_w.Write(userName.c_str());
 			peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
 		}	return true;
 
-			// test message
+		// test message
 		case ID_GPRO_MESSAGE_COMMON_BEGIN:
 		{
 			// client receives greeting, just print it
 			ReadTest(bitstream);
 		}	return true;
+		case ID_JOINSERVER:
+		{
+			//get input and store the server name to join
+			std::string serverName;
+			//getline = serverName;
+			RakNet::BitStream bitstream_w;
+			bitstream_w.Write(serverName.c_str());
+			peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
+		}	return true;
+		case ID_LEAVESERVER:
+		{
+			//get input and store the server name to leave
+			std::string serverName;
+			//getline = serverName;
+			RakNet::BitStream bitstream_w;
+			bitstream_w.Write(serverName.c_str());
+			peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
+		} return true;
 
+		case ID_SERVERLIST:
+		{
+			//get input to run this
+			std::string commandName;
+			RakNet::BitStream bitstream_w;
+			bitstream_w.Write(commandName.c_str());
+			peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
+		}return true;
 		}
 		return false;
 	}

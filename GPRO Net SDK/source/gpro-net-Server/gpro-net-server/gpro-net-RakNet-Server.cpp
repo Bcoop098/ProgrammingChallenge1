@@ -23,10 +23,13 @@
 */
 
 #include "gpro-net/gpro-net-server/gpro-net-RakNet-Server.hpp"
-
-
+#include <map>
+#include <iostream>
 namespace gproNet
 {
+	std::map<std::string, std::string> nameToServer;
+	std::map<std::string, bool> userToIsInServer;
+
 	cRakNetServer::cRakNetServer()
 	{
 		RakNet::SocketDescriptor sd(SET_GPRO_SERVER_PORT, 0);
@@ -67,11 +70,59 @@ namespace gproNet
 		{
 			// server receives greeting, print it and send one back
 			RakNet::BitStream bitstream_w;
+			//in here, we get a username and add that to a map of users
+			//userToIsInServer[username] = false; // the user is not in a game server, but the main one
 			ReadTest(bitstream);
 			WriteTest(bitstream_w, "Hello client from server");
 			peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
 		}	return true;
-
+		case ID_JOINSERVER:
+		{
+			//check to see if the user is in the main server, if they are let them join a new server, and set the bool to true. Requires a name to be passed in
+			/*
+			* std::map<std::string, server>::iterator it;
+			* it = nameToServer.find(serverName.ToString());
+			* if(!userToIsInServer[username] && it != nameToServer.end())
+			* {
+			*	let the user join the server
+			*	userToIsInServer[username] = true;
+			*   send connection information to that server
+			*	write the server name, and send that to that server
+			*	peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false); need to set the server being joined
+			* }
+			*/
+		}
+		return true;
+		case ID_LEAVESERVER:
+		{
+			//check to see if the user is not in the main server, if they are let them leave the server, and set the bool to false.
+			/*
+			* std::map<std::string, server>::iterator it;
+			* it = nameToServer.find(serverName.ToString());
+			* if(userToIsInServer[username] && it != nameToServer.end())
+			* {
+			*	let the user join the server
+			*	userToIsInServer[username] = false;
+			*   send disconnect infomation to that server
+			*   write the server name, and send that to that server
+			*   peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
+			* }
+			*/
+		}
+		return true;
+		case ID_SERVERLIST:
+		{
+			RakNet::BitStream bitstream_w;
+			//iterate through the map with all the server names.
+			std::map<std::string, std::string>::iterator it;
+			for (it = nameToServer.begin(); it != nameToServer.end(); it++)
+			{
+				bitstream_w.Write(it->first); //I think it needs to be c string
+				bitstream_w.Write(" ");
+			}
+			peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
+		}
+		return true;
 		}
 		return false;
 	}
