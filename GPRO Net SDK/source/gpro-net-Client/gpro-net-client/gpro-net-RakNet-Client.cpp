@@ -89,11 +89,12 @@ namespace gproNet
 		}	return true;
 		case ID_JOINSERVER:
 		{
-			//get input and store the server name to join
+			//get input and store the server name to join,
 			std::string serverName;
 			//getline = serverName;
 			RakNet::BitStream bitstream_w;
 			bitstream_w.Write(serverName.c_str());
+			bitstream_w.Write(userName.c_str());
 			peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
 		}	return true;
 		case ID_LEAVESERVER:
@@ -103,6 +104,7 @@ namespace gproNet
 			//getline = serverName;
 			RakNet::BitStream bitstream_w;
 			bitstream_w.Write(serverName.c_str());
+			bitstream_w.Write(userName.c_str());
 			peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
 		} return true;
 
@@ -112,6 +114,7 @@ namespace gproNet
 			std::string commandName;
 			RakNet::BitStream bitstream_w;
 			bitstream_w.Write(commandName.c_str());
+			bitstream_w.Write(userName.c_str());
 			peer->Send(&bitstream_w, MEDIUM_PRIORITY, UNRELIABLE_SEQUENCED, 0, sender, false);
 		}return true;
 		}
